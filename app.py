@@ -4,12 +4,10 @@ import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 
-# 1. Page Config & Custom Health Theme (CSS) - Only called once!
-st.set_page_config(page_title="Skin Health AI", page_icon="🌿", layout="centered")
+st.set_page_config(page_title="Skin Tag AI Screener", page_icon="+", layout="centered")
 
 st.markdown("""
     <style>
-    /* Soft, medical/health-based color palette */
     .stApp {
         background-color: #f7fafc;
         color: #2d3748;
@@ -36,7 +34,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. Ordered Classes & Medical Context Dictionary
 classes = [
     'Benign Keratosis / Skin Tag',
     'Melanocytic Nevus (Common Mole)',
@@ -99,7 +96,6 @@ DISEASE_INFO = {
     }
 }
 
-# 3. Load PyTorch Model
 @st.cache_resource
 def load_model():
     device = torch.device("cpu")
@@ -111,27 +107,24 @@ def load_model():
 
 model = load_model()
 
-# 4. User Interface
-st.markdown("<h1 class='main-title'>🌿 Skin Health Companion</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'>+ Skin Tag AI Screener</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-text'>Upload a photo of your skin lesion for an AI-assisted analysis, complete with next steps and peace of mind.</p>", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Take a photo or upload an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Display Image
     col1, col2, col3 = st.columns([1, 2, 1])
     image = Image.open(uploaded_file).convert('RGB')
     with col2:
         st.image(image, caption="Your Uploaded Image", use_column_width=True, clamp=True)
     
-    # Process Image
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
     
-    with torch.spinner("Analyzing image patterns..."):
+    with st.spinner("Analyzing image patterns..."):
         with torch.no_grad():
             outputs = model(transform(image).unsqueeze(0))
             probs = torch.nn.functional.softmax(outputs[0], dim=0)
@@ -142,7 +135,6 @@ if uploaded_file is not None:
     
     st.markdown("---")
     
-    # 5. Display Empathic, Detailed Results
     st.subheader("📋 Analysis Results")
     
     st.markdown(f"### **Most Likely Match:** {top_prediction} ({top_prob*100:.1f}%)")
@@ -174,6 +166,5 @@ if uploaded_file is not None:
             st.write(f"**{cls}**: {prob*100:.1f}%")
             st.progress(float(prob))
 
-# 6. Compassionate Disclaimer
 st.markdown("---")
 st.caption("🩺 **Medical Disclaimer:** We know that checking skin conditions can be stressful. Please remember that this AI is a supportive tool, not a doctor. It analyzes visual patterns but cannot replace professional medical advice, diagnosis, or a physical biopsy. If you are ever worried about a spot on your skin, the best next step is always to schedule a quick checkup with a dermatologist.")
